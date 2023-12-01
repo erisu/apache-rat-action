@@ -1,0 +1,34 @@
+name: Apache RAT
+description: Release Audit Tool - Licenses
+runs:
+  using: composite
+  steps:
+    - name: Check Runner OS
+      if: ${{ runner.os != 'Linux' }}
+      shell: bash
+      run: |
+        echo "This action can only be used on Linux runners"
+        exit 1
+
+    - name: Setup RAT
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        curl --no-progress-meter https://dlcdn.apache.org/creadur/apache-rat-0.15/apache-rat-0.15-bin.tar.gz --output apache-rat-0.15-bin.tar.gz
+        tar zxf apache-rat-0.15-bin.tar.gz
+
+    - name: Run RAT with ratignore
+      if: ${{ hashFiles('.ratignore') != '' }}
+      shell: bash
+      run: java -jar "${{ github.action_path }}/apache-rat-0.15/apache-rat-0.15.jar" -s "${{ github.action_path }}/json.xsl" -E ".ratignore" -d "${{ github.workspace }}" > .ratresults.json
+
+    - name: Run RAT without ratignore
+      if: ${{ hashFiles('.ratignore') == '' }}
+      shell: bash
+      run: java -jar "${{ github.action_path }}/apache-rat-0.15/apache-rat-0.15.jar" -s "${{ github.action_path }}/json.xsl" -d "${{ github.workspace }}" > .ratresults.json
+
+    - name: Test RAT Results
+      shell: bash
+      run: |
+        cat .ratresults.json
+        jq -e '.unapproved == 0' .ratresults.json > /dev/null

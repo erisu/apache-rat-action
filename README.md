@@ -8,6 +8,40 @@ The goal of this GitHub Action is to allow Apache projects to run the release au
 
 This would allow projects to quickly detect if new files during a PR submission or commit push was missing the license header.
 
+## Usage
+
+In your project repo, create a new GitHub Action workflow.
+
+E.g. Directory Structure & Files
+
+```text
+.
+├── .github
+│   └── workflows
+│       └── action.yml
+├── .ratignore
+```
+
+In the `.github/workflows/action.yml` file, write:
+
+```yml
+name: Release Auditing
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Check License Headers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erisu/apache-rat-action@6f00de64b168c95c056948000b12aad16d8ae3ae
+```
+
+This action workflow will checkout the project's content and runs the RAT tool.
+
+Create the optional `.ratignore` file if you want to exclude certian files and folders from being tested.
+
 ## License
 
   Licensed to the Apache Software Foundation (ASF) under one or more

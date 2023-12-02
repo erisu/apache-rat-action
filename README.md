@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: erisu/apache-rat-action@6f00de64b168c95c056948000b12aad16d8ae3ae
+      - uses: erisu/apache-rat-action@v1
 ```
 
 This action workflow will checkout the project's content and runs the RAT tool.

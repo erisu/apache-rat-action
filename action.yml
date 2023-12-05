@@ -16,7 +16,18 @@
 # under the License.
 
 name: Apache RAT
+
 description: Release auditing tool for licenses
+
+inputs:
+  rat-version:
+    description: |
+      Apache RAT Version
+      See Apache Archives for listed version.
+      E.g. 0.15, 0.14, ...
+    required: false
+    default: 0.15
+
 runs:
   using: composite
   steps:
@@ -31,18 +42,18 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
-        curl --no-progress-meter https://dlcdn.apache.org/creadur/apache-rat-0.15/apache-rat-0.15-bin.tar.gz --output apache-rat-0.15-bin.tar.gz
-        tar zxf apache-rat-0.15-bin.tar.gz
+        curl --no-progress-meter https://archive.apache.org/dist/creadur/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}-bin.tar.gz --output apache-rat-${{ inputs.rat-version }}-bin.tar.gz
+        tar zxf apache-rat-${{ inputs.rat-version }}-bin.tar.gz
 
     - name: Run RAT with ratignore
       if: ${{ hashFiles('.ratignore') != '' }}
       shell: bash
-      run: java -jar "${{ github.action_path }}/apache-rat-0.15/apache-rat-0.15.jar" -s "${{ github.action_path }}/json.xsl" -E ".ratignore" -d "${{ github.workspace }}" > .ratresults.json
+      run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -E ".ratignore" -d "${{ github.workspace }}" > .ratresults.json
 
     - name: Run RAT without ratignore
       if: ${{ hashFiles('.ratignore') == '' }}
       shell: bash
-      run: java -jar "${{ github.action_path }}/apache-rat-0.15/apache-rat-0.15.jar" -s "${{ github.action_path }}/json.xsl" -d "${{ github.workspace }}" > .ratresults.json
+      run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -d "${{ github.workspace }}" > .ratresults.json
 
     - name: Display & Test Results
       shell: bash

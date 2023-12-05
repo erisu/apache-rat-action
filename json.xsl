@@ -26,10 +26,11 @@
   "done": true,
   "files": [
     <xsl:for-each select="descendant::resource[license-approval/@name='false']">
-      <xsl:text>  "</xsl:text>
+      <xsl:if test="position() != 1"><xsl:text>    </xsl:text></xsl:if>
+      <xsl:text>"</xsl:text>
       <xsl:value-of select="@name"/>
       <xsl:text>"</xsl:text>
-      <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
+      <xsl:if test="position() != last()"><xsl:text>,&#xA;</xsl:text></xsl:if>
     </xsl:for-each>
   ]
 }

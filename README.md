@@ -2,7 +2,7 @@
 
 ## What is RAT Action?
 
-*Release Audit Tool (Rat)* is a release audit tool, focused on licenses.
+[Apache Release Audit Tool (Rat)](https://creadur.apache.org/rat) is a release audit tool, focused on licenses.
 
 The goal of this GitHub Action is to allow Apache projects to run the release audit tool with in their GitHub Action workflow (CI).
 
@@ -38,9 +38,9 @@ jobs:
       - uses: erisu/apache-rat-action@v1
 ```
 
-This action workflow will checkout the project's content and runs the RAT tool.
+This action workflow will checkout the project's content and run the RAT tool.
 
-Create the optional `.ratignore` file if you want to exclude certian files and folders from being tested.
+Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
 
 ## License
 

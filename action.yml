@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Apache RAT
+name: Apache Creadur RAT
 
 description: Release auditing tool for licenses
 
 inputs:
   rat-version:
     description: |
-      Apache RAT Version
-      See Apache Archives for listed version.
-      E.g. 0.15, 0.14, ...
+      Apache Creadur RAT Version
+      See Apache archives for available versions.
+      e.g. 0.15, 0.14, ...
     required: false
     default: 0.15
 
@@ -38,19 +38,19 @@ runs:
         echo "This action can only be used on Linux runners"
         exit 1
 
-    - name: Setup RAT
+    - name: Setup Apache Creadur RAT
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
         curl --no-progress-meter https://archive.apache.org/dist/creadur/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}-bin.tar.gz --output apache-rat-${{ inputs.rat-version }}-bin.tar.gz
         tar zxf apache-rat-${{ inputs.rat-version }}-bin.tar.gz
 
-    - name: Run RAT with ratignore
+    - name: Run Apache Creadur RAT with ratignore
       if: ${{ hashFiles('.ratignore') != '' }}
       shell: bash
       run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -E ".ratignore" -d "${{ github.workspace }}" > .ratresults.json
 
-    - name: Run RAT without ratignore
+    - name: Run Apache Creadur RAT without ratignore
       if: ${{ hashFiles('.ratignore') == '' }}
       shell: bash
       run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -d "${{ github.workspace }}" > .ratresults.json

@@ -26,7 +26,7 @@ inputs:
       See Apache archives for available versions.
       e.g. 0.15, 0.14, ...
     required: false
-    default: 0.15
+    default: 0.16.1
 
 runs:
   using: composite

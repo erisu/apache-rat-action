@@ -26,7 +26,7 @@ inputs:
       See Apache dlcdn or archives for available versions.
       e.g. 0.15, 0.14, ...
     required: false
-    default: 0.16.1
+    default: 0.17
 
 runs:
   using: composite
@@ -62,12 +62,25 @@ runs:
     - name: Run Apache Creadur RAT with ratignore
       if: ${{ hashFiles('.ratignore') != '' }}
       shell: bash
-      run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -E ".ratignore" -d "${{ github.workspace }}" > .ratresults.json
+      run: |
+        java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" \
+          --output-style "${{ github.action_path }}/json.xsl" \
+          --input-exclude-file .ratignore \
+          --log-level OFF \
+          -- "${{ github.workspace }}" \
+        | sed '/^INFO: Apache Creadur RAT/d' \
+        > .ratresults.json
 
     - name: Run Apache Creadur RAT without ratignore
       if: ${{ hashFiles('.ratignore') == '' }}
       shell: bash
-      run: java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" -s "${{ github.action_path }}/json.xsl" -d "${{ github.workspace }}" > .ratresults.json
+      run: |
+        java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" \
+          --output-style "${{ github.action_path }}/json.xsl" \
+          --log-level OFF \
+          -- "${{ github.workspace }}" \
+        | sed '/^INFO: Apache Creadur RAT/d' \
+        > .ratresults.json
 
     - name: Display & Test Results
       shell: bash

@@ -67,10 +67,7 @@ runs:
           --output-style "${{ github.action_path }}/json.xsl" \
           --input-exclude-file .ratignore \
           --log-level OFF \
-          -- "${{ github.workspace }}" \
-        | sed '/^INFO: Apache Creadur RAT/d' \
-        > .ratresults.json
-      continue-on-error: true
+          -- "${{ github.workspace }}"
 
     - name: Run Apache Creadur RAT without ratignore
       if: ${{ hashFiles('.ratignore') == '' }}
@@ -79,13 +76,4 @@ runs:
         java -jar "${{ github.action_path }}/apache-rat-${{ inputs.rat-version }}/apache-rat-${{ inputs.rat-version }}.jar" \
           --output-style "${{ github.action_path }}/json.xsl" \
           --log-level OFF \
-          -- "${{ github.workspace }}" \
-        | sed '/^INFO: Apache Creadur RAT/d' \
-        > .ratresults.json
-      continue-on-error: true
-
-    - name: Display & Test Results
-      shell: bash
-      run: |
-        cat .ratresults.json
-        jq -e '.unapproved == 0' .ratresults.json > /dev/null
+          -- "${{ github.workspace }}"

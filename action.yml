@@ -70,6 +70,7 @@ runs:
           -- "${{ github.workspace }}" \
         | sed '/^INFO: Apache Creadur RAT/d' \
         > .ratresults.json
+      continue-on-error: true
 
     - name: Run Apache Creadur RAT without ratignore
       if: ${{ hashFiles('.ratignore') == '' }}
@@ -81,6 +82,7 @@ runs:
           -- "${{ github.workspace }}" \
         | sed '/^INFO: Apache Creadur RAT/d' \
         > .ratresults.json
+      continue-on-error: true
 
     - name: Display & Test Results
       shell: bash

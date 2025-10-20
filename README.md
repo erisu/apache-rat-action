@@ -29,18 +29,28 @@ name: Release Auditing
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Check License Headers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: erisu/apache-rat-action@v1
+      - uses: actions/checkout@v5
+      - uses: erisu/apache-rat-action@v2
 ```
 
 This action workflow will checkout the project's content and run the RAT tool.
 
 Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
+
+## Version Compatibility Matrix
+
+| RAT Action Version | Compatible RAT Binary Version
+| -- | -- |
+| 2.0.0 | 0.17 & newer |
+| 1.2.0 | 0.14 - 0.16.x |
 
 ## License
 

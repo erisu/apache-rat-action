@@ -47,7 +47,7 @@ Create the optional `.ratignore` file if you want to exclude certain files and f
 
 ## Version Compatibility Matrix
 
-| RAT Action Version | Compatible RAT Binary Version
+| Action Version | Compatible Apache Creadur RAT Version
 | -- | -- |
 | 2.0.0 | 0.17 & newer |
 | 1.2.0 | 0.14 - 0.16.x |

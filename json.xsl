@@ -21,11 +21,11 @@
   <xsl:output method="text"/>
   <xsl:template match="/">
 {
-  "unknown": <xsl:value-of select="count(descendant::header-type[attribute::name='?????'])"/>,
-  "unapproved": <xsl:value-of select="count(descendant::resource[license-approval/@name='false'])"/>,
+  "unknown": <xsl:value-of select="count(descendant::resource[license[@approval='false'] and license[@name='Unknown license']])"/>,
+  "unapproved": <xsl:value-of select="count(descendant::resource[license[@approval='false']])"/>,
   "done": true,
   "files": [
-    <xsl:for-each select="descendant::resource[license-approval/@name='false']">
+    <xsl:for-each select="descendant::resource[license[@approval='false']]">
       <xsl:if test="position() != 1"><xsl:text>    </xsl:text></xsl:if>
       <xsl:text>"</xsl:text>
       <xsl:value-of select="@name"/>

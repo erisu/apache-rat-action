@@ -71,7 +71,7 @@ Create the optional `.ratignore` file if you want to exclude certain files and f
 
 ## Contribution
 
-If you want to contribute, feel free to branch from master and provide a pull request via Github.
+If you want to contribute, fork the repo, create a branch from main, and submit a pull request on GitHub.
 
 <!-- Uncomment if Creadur RAT wants to take ownership of the project -->
 <!--

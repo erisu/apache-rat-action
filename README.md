@@ -29,18 +29,28 @@ name: Release Auditing
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Check License Headers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: erisu/apache-rat-action@v1
+      - uses: actions/checkout@v5
+      - uses: erisu/apache-rat-action@v2
 ```
 
 This action workflow will checkout the project's content and run the RAT tool.
 
 Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
+
+## Version Compatibility Matrix
+
+| Action Version | Compatible Apache Creadur RAT Version
+| -- | -- |
+| 2.0.0 | 0.17 & newer |
+| 1.2.0 | 0.14 - 0.16.x |
 
 ## License
 
@@ -61,7 +71,7 @@ Create the optional `.ratignore` file if you want to exclude certain files and f
 
 ## Contribution
 
-If you want to contribute, feel free to branch from master and provide a pull request via Github.
+If you want to contribute, fork the repo, create a branch from main, and submit a pull request on GitHub.
 
 <!-- Uncomment if Creadur RAT wants to take ownership of the project -->
 <!--

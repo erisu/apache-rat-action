@@ -47,13 +47,15 @@ This action workflow will checkout the project's content and run the RAT tool.
 
 Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
 
+**Note:** Currently, this action can only be used on Linux runners. If the `runs-on` parameter is set to anything other than `ubuntu` (Linux), the action will terminate.
+
 ### Configure the Apache Creadur RAT version
 
 When using the `erisu/apache-rat-action` GitHub Action you can choose which version of the Apache Creadur RAT tool to run.
 
 Although the action has a default version (which is usually recommended), you can override it.
 
-Note: Not every Apache Creadur RAT release is guaranteed to work with every version of the action. Please review the Version Compatibility Matrix in this README before changing the version.
+**Note:** Not every Apache Creadur RAT release is guaranteed to work with every version of the action. Please review the Version Compatibility Matrix in this README before changing the version.
 
 To override the version, add the `rat-version` setting to the `with` block when using this action. For example:
 

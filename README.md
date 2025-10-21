@@ -22,6 +22,8 @@ E.g. Directory Structure & Files
 ├── .ratignore
 ```
 
+The `action.yml` file can be renamed to anything you prefer (e.g., `rat.yml`), but it must remain in this folder path and have the `.yml` extension. For consistency, we will refer to this file as `action.yml` throughout this documentation.
+
 In the `.github/workflows/action.yml` file, write:
 
 ```yml
@@ -45,12 +47,30 @@ This action workflow will checkout the project's content and run the RAT tool.
 
 Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
 
+**Note:** Currently, this action can only be used on Linux runners. If the `runs-on` parameter is set to anything other than `ubuntu` (Linux), the action will terminate.
+
+### Configure the Apache Creadur RAT version
+
+When using the `erisu/apache-rat-action` GitHub Action you can choose which version of the Apache Creadur RAT tool to run.
+
+Although the action has a default version (which is usually recommended), you can override it.
+
+**Note:** Not every Apache Creadur RAT release is guaranteed to work with every version of the action. Please review the Version Compatibility Matrix in this README before changing the version.
+
+To override the version, add the `rat-version` setting to the `with` block when using this action. For example:
+
+```yml
+- uses: erisu/apache-rat-action@v2
+  with:
+    rat-version: '0.17'
+```
+
 ## Version Compatibility Matrix
 
-| Action Version | Compatible Apache Creadur RAT Version
-| -- | -- |
-| 2.0.0 | 0.17 & newer |
-| 1.2.0 | 0.14 - 0.16.x |
+| Action Version | Default Apache Creadur RAT Version | Compatible Apache Creadur RAT Version |
+| -- | -- | -- |
+| 2.0.0 | 0.17 | 0.17 & newer |
+| 1.2.0 | 0.16.1 | 0.14 - 0.16.x |
 
 ## License
 

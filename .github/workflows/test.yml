@@ -1,0 +1,79 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Test Action
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test-without-ratignore:
+    name: Test without .ratignore
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Case 1 - All Has License
+        uses: ./
+
+      - name: Create missing header license files
+        run: |
+          echo "random string" > file-missing-license.txt
+
+      - name: Use Case 2 - File Missing License
+        id: rat-failed-case
+        continue-on-error: true
+        uses: ./
+
+      - name: Verify Expected Fail Case
+        run: |
+          if [ "${{ steps.rat-failed-case.outcome }}" != "failure" ]; then
+            echo "Expected Failure but Passed"
+            exit 1
+          else
+            echo "Correctly Failed"
+          fi
+
+  test-with-ratignore:
+    name: Test with .ratignore
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Create .ratignore file
+        # Creating a .ratignore file and ignoring itself & file-missing-license.txt.
+        run: echo -e ".ratignore\nfile-missing-license.txt" > .ratignore
+
+      - name: Create missing header license files
+        run: |
+          echo "random string" > file-missing-license.txt
+
+      - name: Testing Apache Creadur RAT Action (self-test)
+        uses: ./

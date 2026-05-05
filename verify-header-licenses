@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+set -euo pipefail
+
+# Pull & store the absolute path of where the RAT action script &
+# resources reside from the BASH_SOURCE variable.
+# This prevents issues if users override the working directory
+# with the "--workdir" param.
+ACTION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Ensure that the Apache RAT version is set, not empty, and has valid version format.
+: "${INPUT_RAT_VERSION:?ERROR: INPUT_RAT_VERSION is not set or empty}"
+[[ "$INPUT_RAT_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
+  echo "ERROR: INPUT_RAT_VERSION has an invalid version format: $INPUT_RAT_VERSION"
+  exit 1
+}
+
+# Ensure that the workspace is set, not empty, and exists
+: "${GITHUB_WORKSPACE:?ERROR: GITHUB_WORKSPACE is not set or empty}"
+if [[ ! -d "$GITHUB_WORKSPACE" ]]; then
+  echo "ERROR: The GITHUB_WORKSPACE directory does not exist: $GITHUB_WORKSPACE" >&2
+  exit 1
+fi
+
+# Variables used in script...
+ARCHIVE_BASE_NAME="apache-rat-${INPUT_RAT_VERSION}"
+ARCHIVE_FILE_NAME="${ARCHIVE_BASE_NAME}-bin.tar.gz"
+ARCHIVE_CHECKSUM_FILE="${ARCHIVE_FILE_NAME}.sha512"
+RAT_JAR="${ACTION_DIR}/${ARCHIVE_BASE_NAME}/${ARCHIVE_BASE_NAME}.jar"
+
+# A download helper that fetches both RAT tarball & checksum
+download() {
+  local base_url="$1"
+  local rat_archive_url="${base_url}/${ARCHIVE_FILE_NAME}"
+  local rat_checksum_url="${base_url}/${ARCHIVE_CHECKSUM_FILE}"
+
+  echo "INFO: Attempting to download: ${rat_archive_url}"
+  curl -L --fail --silent --no-progress-meter ${rat_archive_url} -o "${ARCHIVE_FILE_NAME}" || return 1
+
+  echo "INFO: Attempting to download: ${rat_checksum_url}"
+  curl -L --fail --silent --no-progress-meter "${rat_checksum_url}" -o "${ARCHIVE_CHECKSUM_FILE}" || return 1
+}
+
+# Ensure that the following block runs in the RAT Action's app directory
+(
+  cd $ACTION_DIR
+
+  echo "INFO: Downloading Apache RAT ${INPUT_RAT_VERSION}..."
+  if ! download "https://dlcdn.apache.org/creadur/${ARCHIVE_BASE_NAME}"; then
+    echo "WARNING: The Apache RAT version not found in CDN. Will attempt to fetch from archive..."
+    if ! download "https://archive.apache.org/dist/creadur/${ARCHIVE_BASE_NAME}"; then
+      echo "ERROR: Unable to locate and fetch the Apache RAT from CDN or archive."
+      exit 1
+    fi
+  fi
+
+  echo "INFO: Verifying checksum..."
+  # Apache RAT does not provide a valid formatted checksum file.
+  #
+  # "sha512sum" requires the format to be "<hash>  <filename>".
+  #
+  # This block extracts the checksum hash value & appends the
+  # filename before piping to the sha512sum command.
+  #
+  # The following block also is safe if Apache RAT decides to
+  # provide a proper formatted file in the future.
+  EXPECTED_ARCHIVE_CHECKSUM="$(awk '{print $1}' "${ARCHIVE_CHECKSUM_FILE}")"
+  if echo "${EXPECTED_ARCHIVE_CHECKSUM}  ${ARCHIVE_FILE_NAME}" | sha512sum -c --status -; then
+    echo "INFO: Apache RAT checksum matched!"
+  else
+    echo "ERROR: Failed to match the Apache RAT checksum!"
+    exit 1
+  fi
+
+  echo "INFO: Extracting archive..."
+  tar zxf "${ARCHIVE_FILE_NAME}"
+)
+
+echo "INFO: Running Apache RAT..."
+RAT_ARGS=(
+  --output-style "${ACTION_DIR}/json.xsl"
+  --log-level OFF
+)
+
+# Append .ratignore if it exists.
+if [[ -f "$GITHUB_WORKSPACE/.ratignore" ]]; then
+  echo "INFO: Found and configuring to use the project's RAT exclude file."
+  RAT_ARGS+=( --input-exclude-file "$GITHUB_WORKSPACE/.ratignore" )
+fi
+
+java -jar "$RAT_JAR" "${RAT_ARGS[@]}" -- "$GITHUB_WORKSPACE"

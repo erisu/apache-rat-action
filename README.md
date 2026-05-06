@@ -84,7 +84,7 @@ This action can be tested locally by building the Docker image and running it ag
   docker run --rm \
     -e GITHUB_WORKSPACE=/workspace \
     -e INPUT_RAT_VERSION=0.18 \
-    -v "$(pwd):/workspace" \
+    -v "$(pwd):/workspace:ro" \
     apache-rat-action
   ```
 

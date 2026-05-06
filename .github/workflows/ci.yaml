@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Action
+name: Node CI
 
 on:
   push:
@@ -26,54 +26,37 @@ on:
       - '*'
 
 jobs:
-  test-without-ratignore:
-    name: Test without .ratignore
-    runs-on: ubuntu-latest
+  # "test.yml" may already cover this, but will run it again
+  # to ensure this repo follows the license header policy.
+  apacherat:
+    name: Apache RAT (License Header Checker)
 
     permissions:
       contents: read
 
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Use Case 1 - All Has License
+        with:
+          persist-credentials: false
+      - name: Verify License Headers
         uses: ./
 
-      - name: Create missing header license files
-        run: |
-          echo "random string" > file-missing-license.txt
-
-      - name: Use Case 2 - File Missing License
-        id: rat-failed-case
-        continue-on-error: true
-        uses: ./
-
-      - name: Verify Expected Fail Case
-        run: |
-          if [ "${{ steps.rat-failed-case.outcome }}" != "failure" ]; then
-            echo "Expected Failure but Passed"
-            exit 1
-          else
-            echo "Correctly Failed"
-          fi
-
-  test-with-ratignore:
-    name: Test with .ratignore
-    runs-on: ubuntu-latest
+  codeql:
+    name: CodeQL
 
     permissions:
       contents: read
+      security-events: write
+
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        with:
+          languages: actions
+          queries: security-and-quality
 
-      - name: Create .ratignore file
-        # Creating a .ratignore file and ignoring itself & file-missing-license.txt.
-        run: echo -e ".ratignore\nfile-missing-license.txt" > .ratignore
-
-      - name: Create missing header license files
-        run: |
-          echo "random string" > file-missing-license.txt
-
-      - name: Testing Apache Creadur RAT Action (self-test)
-        uses: ./
+      - uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3

@@ -39,7 +39,7 @@ jobs:
     name: Check License Headers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: erisu/apache-rat-action@v2
 ```
 
@@ -62,7 +62,7 @@ To override the version, add the `rat-version` setting to the `with` block when 
 ```yml
 - uses: erisu/apache-rat-action@v2
   with:
-    rat-version: '0.17'
+    rat-version: '0.18'
 ```
 
 ## Testing Locally
@@ -83,8 +83,8 @@ This action can be tested locally by building the Docker image and running it ag
   ```bash
   docker run --rm \
     -e GITHUB_WORKSPACE=/workspace \
-    -e INPUT_RAT_VERSION=0.17 \
-    -v "$(pwd):/workspace" \
+    -e INPUT_RAT_VERSION=0.18 \
+    -v "$(pwd):/workspace:ro" \
     apache-rat-action
   ```
 

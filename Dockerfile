@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# eclipse-temurin:21.0.10_7-jdk
-FROM eclipse-temurin@sha256:e58e492628c1428ceb838afc1a1b8762673d5eaa09296f560c363daea0fdcf3b
+# eclipse-temurin:25.0.3_9-jdk
+FROM eclipse-temurin@sha256:c3a5cfd77c9a43dd95269a266290d365b79b174381d8336a3f76a7ae117beefa
 
 # Install dependecies
 RUN apt-get update \

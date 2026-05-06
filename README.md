@@ -65,6 +65,29 @@ To override the version, add the `rat-version` setting to the `with` block when 
     rat-version: '0.17'
 ```
 
+## Testing Locally
+
+This action can be tested locally by building the Docker image and running it against a target directory.
+
+1. Ensure Docker is installed and running.
+2. Clone this repository and change your working directory to the cloned repository.
+3. Build the Docker image:
+
+  ```bash
+  docker build -t apache-rat-action .
+  ```
+
+4. Navigate to the target directory you want to analyze.
+5. Run the image:
+
+  ```bash
+  docker run --rm \
+    -e GITHUB_WORKSPACE=/workspace \
+    -e INPUT_RAT_VERSION=0.17 \
+    -v "$(pwd):/workspace" \
+    apache-rat-action
+  ```
+
 ## Version Compatibility Matrix
 
 | Action Version | Default Apache Creadur RAT Version | Compatible Apache Creadur RAT Version |

@@ -15,20 +15,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-version: 2
-updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    cooldown:
-      default-days: 6
-    schedule:
-      interval: "cron"
-      cronjob: "0 11 * * 2,4"
+# eclipse-temurin:21.0.10_7-jdk
+FROM eclipse-temurin@sha256:e58e492628c1428ceb838afc1a1b8762673d5eaa09296f560c363daea0fdcf3b
 
-  - package-ecosystem: "docker"
-    directory: "/"
-    cooldown:
-      default-days: 6
-    schedule:
-      interval: "cron"
-      cronjob: "0 11 * * 2,4"
+# Install dependecies
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user and group to follow least-privilege principles.
+RUN groupadd --system app \
+ && useradd --system --gid app app
+
+# Set working directory for the action's code inside the container image
+WORKDIR /app
+
+RUN chown -R app:app /app
+COPY verify-header-licenses json.xsl ./
+
+# Make script executable
+RUN chmod +x /app/verify-header-licenses
+
+# Drop privileges
+USER app
+
+# Run the script with sh
+ENTRYPOINT ["/bin/bash", "/app/verify-header-licenses"]

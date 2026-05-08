@@ -28,8 +28,16 @@ inputs:
     required: false
     default: 0.18
 
+  rat-exclude-filename:
+    description: |
+      Filename of the custom Apache RAT exclude.
+      The file must exists in the root directory of the projects.
+      By default, this action look for .ratignore or .rat-excludes (order as listed)
+    required: false
+
 runs:
   using: docker
   image: Dockerfile
   env:
     INPUT_RAT_VERSION: ${{ inputs.rat-version }}
+    INPUT_RAT_EXCLUDE_FILENAME: ${{ inputs.rat-exclude-filename }}

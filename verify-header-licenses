@@ -48,22 +48,24 @@ info() {
   echo "INFO: $*"
 }
 
-# Ensure that the Apache RAT version is set, not empty, and has valid version format.
+# MARK: Ensure RAT Version
+# Version must be set, not empty, and has valid version format.
 : "${INPUT_RAT_VERSION:?ERROR: INPUT_RAT_VERSION is not set or empty}"
 [[ "$INPUT_RAT_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
   error "INPUT_RAT_VERSION has an invalid version format: $INPUT_RAT_VERSION"
   exit 1
 }
 
-# Ensure that the workspace is set, not empty, and exists
+# MARK: Ensure Workspace
+# Workspace must be set, not empty, and exists.
 : "${GITHUB_WORKSPACE:?ERROR: GITHUB_WORKSPACE is not set or empty}"
 if [[ ! -d "$GITHUB_WORKSPACE" ]]; then
   error "The GITHUB_WORKSPACE directory does not exist: $GITHUB_WORKSPACE" >&2
   exit 1
 fi
 
+# MARK: RAT Exclude Setup
 RAT_EXCLUDE_FILENAME_CANDIDATES=()
-
 if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" ]]; then
   [[ "$INPUT_RAT_EXCLUDE_FILENAME" =~ ^[A-Za-z0-9._-]+$ ]] || {
     error "INPUT_RAT_EXCLUDE_FILENAME has an invalid format: $INPUT_RAT_EXCLUDE_FILENAME (A-Za-z0-9._-)"
@@ -94,13 +96,14 @@ if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" && -z "${RAT_EXCLUDE_PATH:-}" ]]; the
   exit 1
 fi
 
-# Variables used in script...
+# MARK: Variable Setup
 ARCHIVE_BASE_NAME="apache-rat-${INPUT_RAT_VERSION}"
 ARCHIVE_FILE_NAME="${ARCHIVE_BASE_NAME}-bin.tar.gz"
 ARCHIVE_CHECKSUM_FILE="${ARCHIVE_FILE_NAME}.sha512"
 RAT_JAR="${ACTION_DIR}/${ARCHIVE_BASE_NAME}/${ARCHIVE_BASE_NAME}.jar"
 
-# A download helper that fetches both RAT tarball & checksum
+# MARK: Download Helper
+# Downloads both RAT tarball & checksum
 download() {
   local base_url="$1"
   local rat_archive_url="${base_url}/${ARCHIVE_FILE_NAME}"
@@ -113,10 +116,11 @@ download() {
   curl -L --fail --silent --no-progress-meter "${rat_checksum_url}" -o "${ARCHIVE_CHECKSUM_FILE}" || return 1
 }
 
-# Ensure that the following block runs in the RAT Action's app directory
+# Following block must runs in the RAT action's app directory
 (
   cd $ACTION_DIR
 
+  # MARK: Fetch Binaries
   info "Downloading Apache RAT ${INPUT_RAT_VERSION}..."
   if ! download "https://dlcdn.apache.org/creadur/${ARCHIVE_BASE_NAME}"; then
     warn "The Apache RAT version not found in CDN. Will attempt to fetch from archive..."
@@ -126,6 +130,7 @@ download() {
     fi
   fi
 
+  # MARK: Checksum Validation
   info "Verifying checksum..."
   # Apache RAT does not provide a valid formatted checksum file.
   #
@@ -144,10 +149,12 @@ download() {
     exit 1
   fi
 
+  # MARK: Extracting Binaries
   info "Extracting archive..."
   tar zxf "${ARCHIVE_FILE_NAME}"
 )
 
+# MARK: Configure RAT Args
 info "Running Apache RAT..."
 RAT_ARGS=(
   --output-style "${ACTION_DIR}/json.xsl"
@@ -162,4 +169,5 @@ else
   info "NO RAT exclude file was configured."
 fi
 
+# MARK: Running RAT
 java -jar "$RAT_JAR" "${RAT_ARGS[@]}" -- "$GITHUB_WORKSPACE"

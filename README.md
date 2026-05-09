@@ -2,7 +2,7 @@
 
 ## What is RAT Action?
 
-[Apache Release Audit Tool (Rat)](https://creadur.apache.org/rat) is a release audit tool, focused on licenses.
+[Apache Release Audit Tool (RAT)](https://creadur.apache.org/rat) is a release audit tool, focused on licenses.
 
 The goal of this GitHub Action is to allow Apache projects to run the release audit tool with in their GitHub Action workflow (CI).
 
@@ -10,9 +10,7 @@ This would allow projects to quickly detect if new files during a PR submission 
 
 ## Usage
 
-In your project repo, create a new GitHub Action workflow.
-
-E.g. Directory Structure & Files
+### Example Project Directory Structure
 
 ```text
 .
@@ -22,45 +20,81 @@ E.g. Directory Structure & Files
 ├── .ratignore
 ```
 
-The `action.yml` file can be renamed to anything you prefer (e.g., `rat.yml`), but it must remain in this folder path and have the `.yml` extension. For consistency, we will refer to this file as `action.yml` throughout this documentation.
+### Configuring the Project Workflow
 
-In the `.github/workflows/action.yml` file, write:
+In your project repo, create a new GitHub Action workflow file at:
+
+```text
+.github/workflows/action.yml
+```
+
+> [!NOTE]
+> The file can be renamed to anything you prefer (e.g., `rat.yml`), but it must remain in the `.github/workflows/` directory and use the `.yml` extension.
+
+For consistency, we will refer to this file as `action.yml` throughout this documentation.
+
+Add the following configuration to `.github/workflows/action.yml`:
 
 ```yml
 name: Release Auditing
 
 on: [push, pull_request]
 
-permissions:
-  contents: read
-
 jobs:
-  test:
-    name: Check License Headers
+  apacherat:
+    name: Apache RAT (License Header Checker)
+
+    permissions:
+      contents: read
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: erisu/apache-rat-action@v2
+        with:
+          persist-credentials: false
+      - uses: erisu/apache-rat-action@v3
 ```
 
-This action workflow will checkout the project's content and run the RAT tool.
+This workflow checks out the repository contents and runs the Apache Creadur RAT tool.
 
-Create the optional `.ratignore` file if you want to exclude certain files and folders from being tested.
+### Configuring the RAT Exclude File
 
-**Note:** Currently, this action can only be used on Linux runners. If the `runs-on` parameter is set to anything other than `ubuntu` (Linux), the action will terminate.
+The RAT exclude configuration file is optional.
 
-### Configure the Apache Creadur RAT version
+To exclude specific files or directories from being tested, create either a `.ratignore` or `.rat-excludes` file and list the items you want excluded.
 
-When using the `erisu/apache-rat-action` GitHub Action you can choose which version of the Apache Creadur RAT tool to run.
+By default, this action searches for the following files in this order, and uses the first file it finds:
 
-Although the action has a default version (which is usually recommended), you can override it.
+1. `.ratignore`
+2. `.rat-excludes`
 
-**Note:** Not every Apache Creadur RAT release is guaranteed to work with every version of the action. Please review the Version Compatibility Matrix in this README before changing the version.
-
-To override the version, add the `rat-version` setting to the `with` block when using this action. For example:
+You can also define a custom exclude file name using the `rat-exclude-filename` setting in the `with` block:
 
 ```yml
-- uses: erisu/apache-rat-action@v2
+- uses: erisu/apache-rat-action@v3
+  with:
+    rat-exclude-filename: '.custom-rat-excludes'
+```
+
+The exclude file must reside in the project's root directory.
+
+> [!WARNING]
+> The workflow will fail if `rat-exclude-filename` is specified but the file does not exist. In this case, the action will not fall back to the default exclude files.
+
+### Configuring the Apache Creadur RAT Version
+
+When using the `erisu/apache-rat-action` GitHub Action, you can choose which version of the Apache Creadur RAT tool to run.
+
+Although the action provides a default version (recommended in most cases), you can override it if needed.
+
+> [!WARNING]
+> Not every Apache Creadur RAT release is guaranteed to work with every version of the action. Before changing the version, review the Version Compatibility Matrix in this README.
+
+To override the default version, add the `rat-version` setting to the `with` block:
+
+```yml
+- uses: erisu/apache-rat-action@v3
   with:
     rat-version: '0.18'
 ```
@@ -94,6 +128,7 @@ This action can be tested locally by building the Docker image and running it ag
 
 | Action Version | Default Apache Creadur RAT Version | Compatible Apache Creadur RAT Version |
 | -- | -- | -- |
+| 3.0.0 | 0.18 | 0.17 & newer |
 | 2.0.0 | 0.17 | 0.17 & newer |
 | 1.2.0 | 0.16.1 | 0.14 - 0.16.x |
 

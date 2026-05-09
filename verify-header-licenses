@@ -30,6 +30,14 @@ RED=$'\033[31m'
 YELLOW=$'\033[33m'
 RESET=$'\033[0m'
 
+# Conditions when to disable the colour
+if [[ -z "${GITHUB_ACTIONS:-}" ]]; then
+  if [[ -n "${NO_COLOR:-}" || "${TERM:-}" == "dumb" || ! -t 1 ]]; then
+    RED=""
+    YELLOW=""
+    RESET=""
+  fi
+fi
 error() {
   echo "${RED}ERROR: $*${RESET}" >&2
 }

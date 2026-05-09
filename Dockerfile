@@ -33,7 +33,7 @@ RUN groupadd --system app \
 WORKDIR /app
 
 RUN chown -R app:app /app
-COPY verify-header-licenses json.xsl ./
+COPY --chown=app:app verify-header-licenses json.xsl ./
 
 # Make script executable
 RUN chmod +x /app/verify-header-licenses

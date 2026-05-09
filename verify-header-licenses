@@ -25,17 +25,40 @@ set -euo pipefail
 # with the "--workdir" param.
 ACTION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# MARK: Logging Helpers
+RED=$'\033[31m'
+YELLOW=$'\033[33m'
+RESET=$'\033[0m'
+
+# Conditions when to disable the colour
+if [[ -z "${GITHUB_ACTIONS:-}" ]]; then
+  if [[ -n "${NO_COLOR:-}" || "${TERM:-}" == "dumb" || ! -t 1 ]]; then
+    RED=""
+    YELLOW=""
+    RESET=""
+  fi
+fi
+error() {
+  echo "${RED}ERROR: $*${RESET}" >&2
+}
+warn() {
+  echo "${YELLOW}WARN: $*${RESET}"
+}
+info() {
+  echo "INFO: $*"
+}
+
 # Ensure that the Apache RAT version is set, not empty, and has valid version format.
 : "${INPUT_RAT_VERSION:?ERROR: INPUT_RAT_VERSION is not set or empty}"
 [[ "$INPUT_RAT_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
-  echo "ERROR: INPUT_RAT_VERSION has an invalid version format: $INPUT_RAT_VERSION"
+  error "INPUT_RAT_VERSION has an invalid version format: $INPUT_RAT_VERSION"
   exit 1
 }
 
 # Ensure that the workspace is set, not empty, and exists
 : "${GITHUB_WORKSPACE:?ERROR: GITHUB_WORKSPACE is not set or empty}"
 if [[ ! -d "$GITHUB_WORKSPACE" ]]; then
-  echo "ERROR: The GITHUB_WORKSPACE directory does not exist: $GITHUB_WORKSPACE" >&2
+  error "The GITHUB_WORKSPACE directory does not exist: $GITHUB_WORKSPACE" >&2
   exit 1
 fi
 
@@ -43,7 +66,7 @@ RAT_EXCLUDE_FILENAME_CANDIDATES=()
 
 if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" ]]; then
   [[ "$INPUT_RAT_EXCLUDE_FILENAME" =~ ^[A-Za-z0-9._-]+$ ]] || {
-    echo "ERROR: INPUT_RAT_EXCLUDE_FILENAME has an invalid format: $INPUT_RAT_EXCLUDE_FILENAME (A-Za-z0-9._-)"
+    error "INPUT_RAT_EXCLUDE_FILENAME has an invalid format: $INPUT_RAT_EXCLUDE_FILENAME (A-Za-z0-9._-)"
     exit 1
   }
 
@@ -52,22 +75,22 @@ else
   RAT_EXCLUDE_FILENAME_CANDIDATES+=(".ratignore" ".rat-excludes")
 fi
 
-echo "INFO: Checking for rat exclude file..."
+info "Checking for rat exclude file..."
 for ratExcludeCanidate in "${RAT_EXCLUDE_FILENAME_CANDIDATES[@]}"; do
   possibleExcludePath="$GITHUB_WORKSPACE/$ratExcludeCanidate"
 
   [[ -f "$possibleExcludePath" ]] || {
-    echo "WARN: RAT exclude file not found at: $possibleExcludePath"
+    warn "RAT exclude file not found at: $possibleExcludePath"
     continue
   }
 
   RAT_EXCLUDE_PATH="$possibleExcludePath"
-  echo "INFO: Found rat exclude file: $RAT_EXCLUDE_PATH"
+  info "Found rat exclude file: $RAT_EXCLUDE_PATH"
   break
 done
 
 if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" && -z "${RAT_EXCLUDE_PATH:-}" ]]; then
-  echo "ERROR: Provided RAT exclude filename does not exist: $INPUT_RAT_EXCLUDE_FILENAME"
+  error "Provided RAT exclude filename does not exist: $INPUT_RAT_EXCLUDE_FILENAME"
   exit 1
 fi
 
@@ -83,10 +106,10 @@ download() {
   local rat_archive_url="${base_url}/${ARCHIVE_FILE_NAME}"
   local rat_checksum_url="${base_url}/${ARCHIVE_CHECKSUM_FILE}"
 
-  echo "INFO: Attempting to download: ${rat_archive_url}"
+  info "Attempting to download: ${rat_archive_url}"
   curl -L --fail --silent --no-progress-meter ${rat_archive_url} -o "${ARCHIVE_FILE_NAME}" || return 1
 
-  echo "INFO: Attempting to download: ${rat_checksum_url}"
+  info "Attempting to download: ${rat_checksum_url}"
   curl -L --fail --silent --no-progress-meter "${rat_checksum_url}" -o "${ARCHIVE_CHECKSUM_FILE}" || return 1
 }
 
@@ -94,16 +117,16 @@ download() {
 (
   cd $ACTION_DIR
 
-  echo "INFO: Downloading Apache RAT ${INPUT_RAT_VERSION}..."
+  info "Downloading Apache RAT ${INPUT_RAT_VERSION}..."
   if ! download "https://dlcdn.apache.org/creadur/${ARCHIVE_BASE_NAME}"; then
-    echo "WARNING: The Apache RAT version not found in CDN. Will attempt to fetch from archive..."
+    warn "The Apache RAT version not found in CDN. Will attempt to fetch from archive..."
     if ! download "https://archive.apache.org/dist/creadur/${ARCHIVE_BASE_NAME}"; then
-      echo "ERROR: Unable to locate and fetch the Apache RAT from CDN or archive."
+      error "Unable to locate and fetch the Apache RAT from CDN or archive."
       exit 1
     fi
   fi
 
-  echo "INFO: Verifying checksum..."
+  info "Verifying checksum..."
   # Apache RAT does not provide a valid formatted checksum file.
   #
   # "sha512sum" requires the format to be "<hash>  <filename>".
@@ -115,17 +138,17 @@ download() {
   # provide a proper formatted file in the future.
   EXPECTED_ARCHIVE_CHECKSUM="$(awk '{print $1}' "${ARCHIVE_CHECKSUM_FILE}")"
   if echo "${EXPECTED_ARCHIVE_CHECKSUM}  ${ARCHIVE_FILE_NAME}" | sha512sum -c --status -; then
-    echo "INFO: Apache RAT checksum matched!"
+    info "Apache RAT checksum matched!"
   else
-    echo "ERROR: Failed to match the Apache RAT checksum!"
+    error "Failed to match the Apache RAT checksum!"
     exit 1
   fi
 
-  echo "INFO: Extracting archive..."
+  info "Extracting archive..."
   tar zxf "${ARCHIVE_FILE_NAME}"
 )
 
-echo "INFO: Running Apache RAT..."
+info "Running Apache RAT..."
 RAT_ARGS=(
   --output-style "${ACTION_DIR}/json.xsl"
   --log-level OFF
@@ -133,10 +156,10 @@ RAT_ARGS=(
 
 # One last check for appending rat
 if [[ -n "${RAT_EXCLUDE_PATH:-}" ]]; then
-  echo "INFO: RAT exclude file was configured and will be used."
+  info "RAT exclude file was configured and will be used."
   RAT_ARGS+=( --input-exclude-file "$RAT_EXCLUDE_PATH" )
 else
-  echo "INFO: NO RAT exclude file was configured."
+  info "NO RAT exclude file was configured."
 fi
 
 java -jar "$RAT_JAR" "${RAT_ARGS[@]}" -- "$GITHUB_WORKSPACE"

@@ -166,7 +166,7 @@ if [[ -n "${RAT_EXCLUDE_PATH:-}" ]]; then
   info "RAT exclude file was configured and will be used."
   RAT_ARGS+=( --input-exclude-file "$RAT_EXCLUDE_PATH" )
 else
-  info "NO RAT exclude file was configured."
+  warn "NO RAT exclude file was configured."
 fi
 
 # MARK: Running RAT

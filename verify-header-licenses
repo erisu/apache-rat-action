@@ -39,6 +39,38 @@ if [[ ! -d "$GITHUB_WORKSPACE" ]]; then
   exit 1
 fi
 
+RAT_EXCLUDE_FILENAME_CANDIDATES=()
+
+if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" ]]; then
+  [[ "$INPUT_RAT_EXCLUDE_FILENAME" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "ERROR: INPUT_RAT_EXCLUDE_FILENAME has an invalid format: $INPUT_RAT_EXCLUDE_FILENAME (A-Za-z0-9._-)"
+    exit 1
+  }
+
+  RAT_EXCLUDE_FILENAME_CANDIDATES+=("$INPUT_RAT_EXCLUDE_FILENAME")
+else
+  RAT_EXCLUDE_FILENAME_CANDIDATES+=(".ratignore" ".rat-excludes")
+fi
+
+echo "INFO: Checking for rat exclude file..."
+for ratExcludeCanidate in "${RAT_EXCLUDE_FILENAME_CANDIDATES[@]}"; do
+  possibleExcludePath="$GITHUB_WORKSPACE/$ratExcludeCanidate"
+
+  [[ -f "$possibleExcludePath" ]] || {
+    echo "WARN: RAT exclude file not found at: $possibleExcludePath"
+    continue
+  }
+
+  RAT_EXCLUDE_PATH="$possibleExcludePath"
+  echo "INFO: Found rat exclude file: $RAT_EXCLUDE_PATH"
+  break
+done
+
+if [[ -n "${INPUT_RAT_EXCLUDE_FILENAME:-}" && -z "${RAT_EXCLUDE_PATH:-}" ]]; then
+  echo "ERROR: Provided RAT exclude filename does not exist: $INPUT_RAT_EXCLUDE_FILENAME"
+  exit 1
+fi
+
 # Variables used in script...
 ARCHIVE_BASE_NAME="apache-rat-${INPUT_RAT_VERSION}"
 ARCHIVE_FILE_NAME="${ARCHIVE_BASE_NAME}-bin.tar.gz"
@@ -99,10 +131,12 @@ RAT_ARGS=(
   --log-level OFF
 )
 
-# Append .ratignore if it exists.
-if [[ -f "$GITHUB_WORKSPACE/.ratignore" ]]; then
-  echo "INFO: Found and configuring to use the project's RAT exclude file."
-  RAT_ARGS+=( --input-exclude-file "$GITHUB_WORKSPACE/.ratignore" )
+# One last check for appending rat
+if [[ -n "${RAT_EXCLUDE_PATH:-}" ]]; then
+  echo "INFO: RAT exclude file was configured and will be used."
+  RAT_ARGS+=( --input-exclude-file "$RAT_EXCLUDE_PATH" )
+else
+  echo "INFO: NO RAT exclude file was configured."
 fi
 
 java -jar "$RAT_JAR" "${RAT_ARGS[@]}" -- "$GITHUB_WORKSPACE"

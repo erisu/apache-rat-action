@@ -81,7 +81,9 @@ This action can be tested locally by building the Docker image and running it ag
 5. Run the image:
 
   ```bash
-  docker run --rm \
+  docker run --rm -t \
+    --cap-drop=ALL \
+    --security-opt=no-new-privileges \
     -e GITHUB_WORKSPACE=/workspace \
     -e INPUT_RAT_VERSION=0.18 \
     -v "$(pwd):/workspace:ro" \

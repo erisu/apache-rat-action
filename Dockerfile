@@ -16,7 +16,7 @@
 # under the License.
 
 # eclipse-temurin:25.0.3_9-jdk
-FROM eclipse-temurin@sha256:c3a5cfd77c9a43dd95269a266290d365b79b174381d8336a3f76a7ae117beefa
+FROM eclipse-temurin@sha256:201fbb8886b2d273218aa3a192f0afbf7b5ff65ee8cc6ef47f5dce2171f013ea
 
 # Install dependecies
 RUN apt-get update \
